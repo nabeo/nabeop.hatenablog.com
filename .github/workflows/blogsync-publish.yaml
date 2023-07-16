@@ -1,0 +1,61 @@
+name: publish blog entry
+
+on:
+  pull_request:
+    types:
+      - 'closed'
+    branches:
+      - 'master'
+    paths:
+      - 'nabeop.hatenablog.com/**/*.md'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+    steps:
+    - name: checkout
+      uses: actions/checkout@v3
+    - name: show github context
+      env:
+        GITHUB_CONTEXT: ${{ toJSON(github) }}
+      run: |
+        echo ${GITHUB_CONTEXT}
+    - name: hatenaid
+      id: hatena_id
+      env:
+        PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+      run: |
+        echo hatena_id=$(jq --arg github_login ${PR_AUTHOR} '.[$github_login].hatena_id' map.json) | tr -d '"' >> $GITHUB_OUTPUT
+        echo password_secret_name=$(jq --arg github_login ${PR_AUTHOR} '.[$github_login].password_secret_name' map.json) | tr -d '"' >> $GITHUB_OUTPUT
+    - name: changed file
+      id: changed_file
+      env:
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+        REPO_FULL_NAME: ${{ github.event.pull_request.base.repo.full_name }}
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        echo publish_entry=$(gh api repos/${REPO_FULL_NAME}/pulls/${PR_NUMBER}/files --jq '.[] | select( .status | test("^(added|modified)$")) | select( .filename | test("^nabeop.hatenablog.com")) | .filename' ) >> $GITHUB_OUTPUT
+    - name: install blogsync
+      uses: x-motemen/blogsync@v0
+    - name: blogsync post
+      if: ${{ steps.changed_file.outputs.publish_entry != '' }}
+      env:
+        BLOGSYNC_USERNAME: ${{ steps.hatena_id.outputs.hatena_id }}
+        BLOGSYNC_PASSWORD : ${{ secrets[steps.hatena_id.outputs.password_secret_name] }}
+        ENTRY_FILENAME: ${{ steps.changed_file.outputs.publish_entry }}
+        PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+      run: |
+        sed -i -e 's/^Draft:.*/Draft: false/g' "${ENTRY_FILENAME}"
+        echo "::debug:: $(cat ${ENTRY_FILENAME})"
+        blogsync push "${ENTRY_FILENAME}"
+        file=$( git ls-files --modified --others --exclude-standard nabeop.hatenablog.com )
+        if [ "x${ENTRY_FILENAME}" != "x${file}" ]; then
+          cat "${file}" > "${ENTRY_FILENAME}"
+        fi
+        git config user.name github-actions
+        git config user.email github-actions@github.com
+        git add ${ENTRY_FILENAME}
+        git commit -m "publish blog entry by ${PR_AUTHOR} (#${PR_NUMBER})"
+        git push
