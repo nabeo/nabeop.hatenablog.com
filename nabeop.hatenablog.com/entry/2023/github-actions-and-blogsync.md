@@ -3,7 +3,7 @@ Title: Github Actions と blogsync を使ってはてなブログの記事を管
 Category:
 - blogsync
 - Github Actions
-Date: 2023-07-16T23:17:41+09:00
+Date: 2023-07-16T23:50:00+09:00
 URL: https://nabeop.hatenablog.com/entry/2023/github-actions-and-blogsync
 EditURL: https://blog.hatena.ne.jp/nabeop/nabeop.hatenablog.com/atom/entry/820878482950392555
 Draft: true
