@@ -6,7 +6,6 @@ Category:
 Date: 2023-07-16T23:50:00+09:00
 URL: https://nabeop.hatenablog.com/entry/2023/github-actions-and-blogsync
 EditURL: https://blog.hatena.ne.jp/nabeop/nabeop.hatenablog.com/atom/entry/820878482950392555
-Draft: true
 CustomPath: 2023/github-actions-and-blogsync
 ---
 
