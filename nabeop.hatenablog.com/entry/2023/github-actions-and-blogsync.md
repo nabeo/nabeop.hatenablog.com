@@ -47,3 +47,11 @@ blogsync がはてなブログの Atom Pub API を使うときの認証情報は
 ```
 
 ひとまず、今の状態でしばらく使ってみていまいちなところとかはチマチマ直していくかという気分になっている。今のところ `blogsync pull` に相当するワークフローを作っていないのではてなブログの管理画面などで変更した内容を取り込むときには個別で頑張る必要があるはず。
+
+## 追記
+
+この記事を公開するための準備ではじめて使ったら P-R にラベルを付与するところで、
+
+> GraphQL: Resource not accessible by integration (addLabelsToLabelable)
+
+というエラーが出て失敗してしまった。これは Github token のデフォルトの権限が参照しか付与されていないからだった。リポジトリの Settings から Workflow permissions が「Read repository contents and packages permissions」になっているので「Read and write permissions」に変更するか、ワークフローの定義で個別に指定すればよいはず。面倒なのでデフォルトの権限を「Read and write permissions」にしちゃったけど、本来は `contents: write` と `pull-requests: write` か `issues: write` の権限があれば十分なはず。
