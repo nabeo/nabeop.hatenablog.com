@@ -48,8 +48,8 @@ jobs:
         PR_NUMBER: ${{ github.event.pull_request.number }}
       run: |
         blogsync push "${ENTRY_FILENAME}"
-        git config user.name github-actions
-        git config user.email github-actions@github.com
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
         export file=$( git ls-files --modified --others --exclude-standard nabeop.hatenablog.com )
         if [ "x${file}" != "x" ]; then
           cat ${untracked_file} > "${ENTRY_FILENAME}"
@@ -67,8 +67,8 @@ jobs:
         PR_NUMBER: ${{ github.event.pull_request.number }}
       run: |
         blogsync push "${ENTRY_FILENAME}"
-        git config user.name github-actions
-        git config user.email github-actions@github.com
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
         export file=$( git ls-files --modified --others --exclude-standard nabeop.hatenablog.com )
         if [ "x${file}" != "x" ]; then
           cat ${untracked_file} > "${ENTRY_FILENAME}"
