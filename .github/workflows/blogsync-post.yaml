@@ -63,8 +63,8 @@ jobs:
       run: |
         blogsync post --draft nabeop.hatenablog.com < "${ENTRY_FILENAME}"
         gh pr edit ${PR_NUMBER} --add-label "blogsync/created"
-        git config user.name github-actions
-        git config user.email github-actions@github.com
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
         export added_entry=$( git ls-files --others --exclude-standard nabeop.hatenablog.com )
         git add ${added_entry}
         git commit -m "new post by ${PR_AUTHOR} (#${PR_NUMBER})"
