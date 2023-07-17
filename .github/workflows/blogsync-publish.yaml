@@ -54,8 +54,8 @@ jobs:
         if [ "x${ENTRY_FILENAME}" != "x${file}" ]; then
           cat "${file}" > "${ENTRY_FILENAME}"
         fi
-        git config user.name github-actions
-        git config user.email github-actions@github.com
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
         git add ${ENTRY_FILENAME}
         git commit -m "publish blog entry by ${PR_AUTHOR} (#${PR_NUMBER})"
         git push
