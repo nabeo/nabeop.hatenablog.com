@@ -20,8 +20,31 @@ jobs:
       uses: actions/checkout@v3
       with:
         ref: ${{ inputs.branch }}
+    - name: install blogsync
+      uses: x-motemen/blogsync@v0
     - name: show github context
       env:
         GITHUB_CONTEXT: ${{ toJSON(github) }}
       run: |
         echo ${GITHUB_CONTEXT}
+    - name: hatena id
+      id: hatena_id
+      env:
+        GITHUB_USER: ${{ github.triggering_actor }}
+      run: |
+        echo hatena_id=$(jq --arg github_login ${GITHUB_USER} '.[$github_login].hatena_id' map.json) | tr -d '"' >> $GITHUB_OUTPUT
+        echo password_secret_name=$(jq --arg github_login ${GITHUB_USER} '.[$github_login].password_secret_name' map.json) | tr -d '"' >> $GITHUB_OUTPUT
+    - name: sync blog entries
+      env:
+        BLOGSYNC_USERNAME: ${{ steps.hatena_id.outputs.hatena_id }}
+        BLOGSYNC_PASSWORD : ${{ secrets[steps.hatena_id.outputs.password_secret_name] }}
+      run: |
+        blogsync pull nabeop.hatenablog.com
+        export count=$(git ls-files --modified --others --exclude-standard nabeop.hatenablog.com | wc -l | awk '{print $1}')
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        if [ "x${count}" != "x0" ]; then
+          git add nabeop.hatenablog.com
+          git commit -m "sync blog entries by blogsync pull"
+          git push
+        fi
