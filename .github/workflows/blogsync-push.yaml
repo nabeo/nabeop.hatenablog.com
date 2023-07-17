@@ -10,6 +10,9 @@ on:
     paths:
       - 'nabeop.hatenablog.com/**/*.md'
 
+permissions:
+  contents: 'write'
+
 jobs:
   push:
     runs-on: ubuntu-latest
