@@ -19,14 +19,6 @@ permissions:
 jobs:
   post:
     runs-on: ubuntu-latest
-    if: |
-      (
-       ((contains(fromJSON('["synchronize", "opened"]'), github.event.action)) &&
-        (contains(github.event.pull_request.labels.*.name, 'blogsync/created') == false))
-       ||
-       ((github.event.action == 'labeled') &&
-        (github.event.label.name != 'blogsync/created'))
-      )
     steps:
     - name: checkout
       uses: actions/checkout@v3
@@ -52,12 +44,23 @@ jobs:
         GH_TOKEN: ${{ github.token }}
       run: |
         echo new_entry=$(gh api repos/${REPO_FULL_NAME}/pulls/${PR_NUMBER}/files --jq '.[] | select( .status == "added" ) | select( .filename | test("^(authors|nabeop.hatenablog.com)")) | .filename' ) >> $GITHUB_OUTPUT
-    - name: install blogsync
+    - name: check EditUrl
+      id: check_editurl
       if: ${{ steps.changed_file.outputs.new_entry != '' }}
+      env:
+        ENTRY_FILENAME: ${{ steps.changed_file.outputs.new_entry }}
+      run: |
+        echo "::debug::check file : ${ENTRY_FILENAME}"
+        export entry_file_metadata="$(head -n $( egrep -n -e '^---$' ${ENTRY_FILENAME} | head -n 2 | tail -n 1| cut -d: -f 1 ) ${ENTRY_FILENAME})"
+        echo "::debug::Entry File metadata: ${entry_file_metadata}"
+        count="$(echo ${entry_file_metadata} | grep -e "^EditUrl:" | wc -l)"
+        echo "count=$(echo ${count})" >> $GITHUB_OUTPUT
+    - name: install blogsync
+      if: ${{ steps.changed_file.outputs.new_entry != '' && steps.check_editurl.outputs.count == '0' }}
       uses: x-motemen/blogsync@v0
     - name: blogsync post
       id: blogsync_post
-      if: ${{ steps.changed_file.outputs.new_entry != '' }}
+      if: ${{ steps.changed_file.outputs.new_entry != '' && steps.check_editurl.outputs.count == '0' }}
       env:
         BLOGSYNC_USERNAME: ${{ steps.hatena_id.outputs.hatena_id }}
         BLOGSYNC_PASSWORD : ${{ secrets[steps.hatena_id.outputs.password_secret_name] }}
@@ -67,7 +70,6 @@ jobs:
         GH_TOKEN: ${{ github.token }}
       run: |
         blogsync post --draft nabeop.hatenablog.com < "${ENTRY_FILENAME}"
-        gh pr edit ${PR_NUMBER} --add-label "blogsync/created"
         git config user.name "github-actions[bot]"
         git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
         export added_entry=$( git ls-files --others --exclude-standard nabeop.hatenablog.com )
