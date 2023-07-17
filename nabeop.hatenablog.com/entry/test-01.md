@@ -7,4 +7,4 @@ Draft: true
 CustomPath: test-01
 ---
 
-これはテストです。
+これはテストです。更新。
